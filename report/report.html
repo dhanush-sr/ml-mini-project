@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Collaborative Filtering on Keywords Recommendation for Clinical Trial Records</title>
+<style>
+  @page { size: A4; margin: 11mm 17mm; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9.8pt; line-height: 1.34; color: #000; margin: 0; }
+  .title { border-bottom: 1.2pt solid #000; padding-bottom: 2.5mm; margin-bottom: 3mm; }
+  h1 { font-size: 15pt; color: #000; margin: 0 0 1.5mm; }
+  .meta { margin: 0.6mm 0; font-size: 9.5pt; }
+  h2 { font-size: 11.5pt; color: #000; margin: 3.6mm 0 1.2mm; }
+  p { margin: 0 0 1.6mm; }
+  ul { margin: 0 0 1.6mm; padding-left: 5mm; }
+  li { margin-bottom: 0.7mm; }
+  table { border-collapse: collapse; font-size: 9.3pt; margin: 1mm 0 2mm; break-inside: avoid; }
+  th, td { border: 0.5pt solid #000; padding: 0.55mm 2.2mm; text-align: left; vertical-align: top; }
+  th { background: none; }
+  td.num { text-align: right; }
+  .eq { text-align: center; margin: 1.2mm 0 1.6mm; font-family: Georgia, serif; font-size: 10.5pt; }
+  i.v { font-family: Georgia, serif; }
+  figure { margin: 2mm 0 2.4mm; text-align: center; break-inside: avoid; }
+  figcaption { font-size: 8.8pt; color: #000; margin-top: 1mm; }
+  img.ss { border: 0.5pt solid #000; }
+  .ref { font-size: 8.6pt; color: #000; margin-top: 2.5mm; }
+</style>
+</head>
+<body>
+
+<div class="title">
+  <h1>Collaborative Filtering on Keywords Recommendation for Clinical Trial Records</h1>
+  <p class="meta">UE24CS352A Machine Learning &middot; Mini-Project 14 &middot; Section B, Team B-06</p>
+  <p class="meta">Dhanush Shankar Reddy (PES1UG24AM083) &middot; Harshith R (PES1UG24AM117)</p>
+  <p class="meta">GitHub: https://github.com/dhanush-sr/ml-mini-project</p>
+</div>
+
+<h2>1. Problem statement</h2>
+<p>Researchers look for earlier clinical trials similar to their own before starting a new one, but
+their search queries often leave out relevant medical terms. In our data, 59% of the trials that
+mention both metformin and type 2 diabetes also mention insulin, a word a searcher might not type.
+The aim of this project is to recommend those missing keywords: given the medical keywords in a
+query, predict which other keywords usually appear with them, so they can be added before searching.
+We implement the collaborative filtering model proposed by Xiao Zhou (Stanford CS229, 2020) and test
+it on real trial records.</p>
+
+<h2>2. Dataset details</h2>
+<table>
+  <tr><th>Source</th><td>ClinicalTrials.gov API, downloaded on 11 October 2026</td></tr>
+  <tr><th>Records used</th><td>The first 50,000 trials returned by the API, out of 606,601 registered</td></tr>
+  <tr><th>Text used per trial</th><td>Brief title, official title, brief summary, detailed description, conditions, eligibility criteria</td></tr>
+  <tr><th>Keyword vocabulary</th><td>MeSH 2026 (Medical Subject Headings): 30,512 terms with 265,712 names and synonyms</td></tr>
+  <tr><th>Keywords kept</th><td>1,237, the ones found in at least 0.5% of trials</td></tr>
+  <tr><th>Trials kept</th><td>49,896 with at least two keywords (median 25 keywords per trial)</td></tr>
+  <tr><th>Split</th><td>39,918 training, 4,989 validation, 4,989 test</td></tr>
+</table>
+<p>Keywords are found by matching trial text against every MeSH name and synonym, so "breast cancer"
+and "Breast Carcinoma" both become <i>Breast Neoplasms</i>. Two cleaning steps were needed.
+Abbreviations are matched case-sensitively, so the "who" in "patients who" is not read as WHO. And
+50 common words that MeSH uses in a different sense are ignored on their own: "will" was being
+read as <i>Volition</i> in 67% of trials.</p>
+
+<h2>3. Approach</h2>
+<p>Each trial becomes a column of TF-IDF scores, one row per keyword. The model predicts each
+keyword's score in a trial from the other keywords in the same trial:</p>
+<p class="eq"><i class="v">R&#770;</i> = ReLU((<i class="v">W</i> &#8857; &Theta;) <i class="v">R</i> + <i class="v">b</i>)</p>
+<ul>
+  <li><i class="v">W</i> is fixed and gives more weight to pairs of keywords that often appear together
+  (cosine similarity). &Theta; and <i class="v">b</i> are learned with mini-batch gradient descent on
+  squared error with L2 regularisation.</li>
+  <li>To evaluate, half of each test trial's keywords are hidden. The model then recommends 3 new
+  keywords, and we measure the share that were really in the trial (precision@3).</li>
+  <li>Hyperparameters (learning rate, &tau;, <i class="v">k</i>, &lambda;) are tuned on the validation set,
+  following the paper.</li>
+  <li>Our additions: three baselines to compare against (popularity, item kNN, SVD), early stopping on
+  the validation set, and ranking recommendations by how much the query raises them (lift), so the
+  demo suggests specific keywords instead of common ones such as <i>Patients</i>.</li>
+</ul>
+
+<h2>4. Implementation overview</h2>
+<p>The project is written in Python with NumPy, Matplotlib and Streamlit, with one module per stage:</p>
+<table>
+  <tr><th>File</th><th>What it does</th></tr>
+  <tr><td>src/fetch_data.py</td><td>Downloads the trial records and the MeSH vocabulary</td></tr>
+  <tr><td>src/mesh.py</td><td>Finds MeSH keywords in text</td></tr>
+  <tr><td>src/build_matrix.py</td><td>Builds the TF-IDF matrix and the training, validation and test split</td></tr>
+  <tr><td>src/model.py</td><td>The collaborative filtering model and gradient descent</td></tr>
+  <tr><td>src/evaluate.py</td><td>Hides keywords, measures precision@K, and the baselines</td></tr>
+  <tr><td>src/train.py</td><td>Hyperparameter search, final training and test results</td></tr>
+  <tr><td>src/recommend.py, app.py</td><td>Command-line tool and Streamlit web demo</td></tr>
+</table>
+<p>The whole project runs on Google Colab with the notebook <i>colab_run.ipynb</i>. On Colab's free CPU,
+training the final models takes 38 minutes (Figure 1). The full hyperparameter search, 74 training runs,
+took 28 minutes on a laptop. A test file checks the gradient calculations.</p>
+<figure>
+  <img class="ss" src="colab_train.png" alt="Training and evaluation output in Colab" style="width: 176mm;">
+  <figcaption>Figure 1: Training and evaluation in Google Colab. The table at the end is precision@K on the
+  test set (P@3 is the paper's APTK). IDF@3 shows how specific the top three keywords are.</figcaption>
+</figure>
+<figure>
+  <img class="ss" src="colab_recommend.png" alt="Keyword recommendation output in Colab" style="width: 136mm;">
+  <figcaption>Figure 2: The recommender in Google Colab. It suggests <i>Obesity</i> even though "obese" in the
+  query was not recognised as a keyword.</figcaption>
+</figure>
+
+<h2>5. Conclusions</h2>
+<ul>
+  <li>The paper's model works. On the test set it finds hidden keywords 36 times as often as random
+  choice (precision@3 of 0.434 against 0.012), close to the paper's own result (0.479 against 0.017).</li>
+  <li>The paper only compared against random choice. Recommending the most common keywords already gives
+  0.394, and a simple item kNN baseline, which needs no training, does better than the model (0.469).</li>
+  <li>Training longer makes the recommendations worse even while the training loss keeps falling
+  (Figure 3). Stopping early on the validation set gives the best version of the model (0.446).</li>
+  <li>Precision rewards common keywords such as <i>Patients</i>. Ranking by lift gives more specific
+  and more useful suggestions (Figure 2), at some cost in precision.</li>
+</ul>
+<figure>
+  <img src="../results/alpha_search.png" alt="Training loss and validation precision per epoch" style="width: 122mm;">
+  <figcaption>Figure 3: Training loss (A) and precision@3 on the validation ("dev") set (B) per epoch, for
+  each learning rate. The loss keeps falling, but precision peaks early.</figcaption>
+</figure>
+<p class="ref">Reference: X. Zhou, "Collaborative Filtering on Keywords Recommendation for Clinical
+Trial Records", CS229 project report, Stanford University, 2020.</p>
+
+</body>
+</html>
