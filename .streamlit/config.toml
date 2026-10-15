@@ -1,0 +1,16 @@
+# Theme for the web demo (app.py), from the Google Stitch design. The glass panels and the
+# background are styled in app.py.
+[theme]
+base = "light"
+primaryColor = "#0B6E69"
+backgroundColor = "#F6F8FC"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#111C2D"
+borderColor = "#DCE3EC"
+linkColor = "#0B6E69"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+baseRadius = "12px"
+showWidgetBorder = true
+
+[client]
+toolbarMode = "minimal"
