@@ -1,0 +1,76 @@
+{
+  "documents_downloaded": 50000,
+  "distinct_mesh_descriptors_found": 17037,
+  "keywords_kept_(df>=0.5%)": 1237,
+  "documents_kept_(>=2_keywords)": 49896,
+  "train_dev_test": [
+    39918,
+    4989,
+    4989
+  ],
+  "keywords_per_document_median": 25.0,
+  "keywords_per_document_mean": 29.89,
+  "matrix_density": 0.0242,
+  "most_common_keywords": [
+    [
+      "Patients",
+      36018
+    ],
+    [
+      "Therapeutics",
+      33340
+    ],
+    [
+      "Methods",
+      21830
+    ],
+    [
+      "Disease",
+      20194
+    ],
+    [
+      "Research Personnel",
+      20175
+    ],
+    [
+      "Informed Consent",
+      17974
+    ],
+    [
+      "Neoplasms",
+      15319
+    ],
+    [
+      "Pharmaceutical Preparations",
+      14936
+    ],
+    [
+      "Diagnosis",
+      14800
+    ],
+    [
+      "Safety",
+      14744
+    ],
+    [
+      "Risk",
+      14269
+    ],
+    [
+      "General Surgery",
+      13874
+    ],
+    [
+      "Women",
+      12132
+    ],
+    [
+      "Hypersensitivity",
+      11574
+    ],
+    [
+      "Infections",
+      11337
+    ]
+  ]
+}
